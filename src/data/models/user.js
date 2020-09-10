@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const bcrypt = require("bcryptjs");
 
-const User = mongoose.model("User", {
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -18,6 +19,7 @@ const User = mongoose.model("User", {
     },
     email: {
         type: String,
+        unique: true,
         required: true,
         lowercase: true,
         trim: true,
@@ -30,11 +32,21 @@ const User = mongoose.model("User", {
         required: true,
         minlength: 7,
         trim: true,
-        validate(value) {
-            if (value.toLowerCase().includes("password"))
-                throw new Error("Password cannot contain the phrase 'password'.");
-        },
     },
 });
+
+userSchema.statics.findByCredentials = async (email, password) => {
+    const user = await User.findOne({ email });
+
+    if (user) {
+        const match = await bcrypt.compare(password, user.password);
+
+        if (match) return user;
+    }
+
+    return null;
+};
+
+const User = mongoose.model("User", userSchema);
 
 module.exports = User;

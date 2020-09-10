@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const connectionURL = process.env.DB_TASKMANAGER_CONNECTION;
+const connectionURL = process.env.APP_DB;
 
 mongoose.connect(connectionURL, {
     useNewUrlParser: true,

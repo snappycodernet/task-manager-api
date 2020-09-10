@@ -6,6 +6,8 @@ const Task = mongoose.model("Task", {
         type: String,
         required: true,
         trim: true,
+        minlength: 6,
+        maxlength: 255,
     },
     completed: {
         type: Boolean,

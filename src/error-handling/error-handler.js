@@ -23,7 +23,7 @@ class ErrorHandlerDistributor {
     }
 
     static getErrorHandler() {
-        const environment = process.env.TASKMANAGER_ENV;
+        const environment = process.env.APP_ENV;
         if (environment === "development") return this.developmentErrorHandler;
 
         return this.productionErrorHandler;

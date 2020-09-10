@@ -9,15 +9,18 @@ const {
 } = require("../error-handling/errors");
 const { ObjectID } = require("mongodb");
 const User = require("../data/models/user");
+const UserDTO = require("../data/dto/user-dto");
+const UserLoginDTO = require("../data/dto/user-login-dto");
 const UserUtilities = require("../data/models/utilities/user-utilities");
 const MongooseUtilities = require("../utilities/mongoose-utils");
+const AccountUtilities = require("../data/models/utilities/account-utilities");
 
 // Get all users
 userRouter.get("/", async (req, res, next) => {
     try {
         const users = await User.find({});
 
-        return res.status(200).send(users);
+        return res.status(200).send(UserUtilities.transformUsersToDtos(users));
     } catch (err) {
         next(err);
     }
@@ -33,7 +36,7 @@ userRouter.get("/:id", async (req, res, next) => {
 
             if (!user) throw new NotFound(`A user with an ID of ${id} was not found in the database.`);
 
-            res.status(200).send(user);
+            res.status(200).send(new UserDTO(user));
         } else {
             throw new BadRequest(`Must enter a valid ID value. The value entered, ${id}, is not valid.`);
         }
@@ -45,10 +48,18 @@ userRouter.get("/:id", async (req, res, next) => {
 // Create a new user
 userRouter.post("/", async (req, res, next) => {
     try {
+        const error = UserUtilities.validateSaveSchema(req.body);
+
+        if (error) throw new BadRequest(null, null, error);
+
         const user = new User(req.body);
+        user.password = await UserUtilities.hashPassword(req.body.password);
+
         await user.save();
 
-        res.status(201).send(user);
+        const token = AccountUtilities.generateAuthToken(user);
+
+        res.status(201).send(new UserLoginDTO(user, token));
     } catch (err) {
         next(err);
     }
@@ -79,32 +90,31 @@ userRouter.delete("/:id", async (req, res, next) => {
 userRouter.patch("/:id", async (req, res, next) => {
     try {
         const id = req.params.id;
-        const updates = req.body;
-        const userUtil = new UserUtilities();
-        const results = userUtil.validateSchema(updates);
+        let updates = req.body;
+        const error = UserUtilities.validateUpdateSchema(updates);
 
-        if (!results.success) {
-            throw new BadRequest(
-                `The updates provided contained fields that do not exist on the model schema: ${results.invalidFields.join(
-                    ","
-                )}.`
-            );
-        }
+        if (error) throw new BadRequest(null, null, error);
 
         if (ObjectID.isValid(id)) {
-            const user = await User.findByIdAndUpdate(id, updates, {
-                new: true,
-                runValidators: true,
-            }).catch((err) => {
-                if (MongooseUtilities.isMongooseError(err)) {
-                    throw new BadRequest(err.message, err.name);
-                }
-
-                throw err;
-            });
+            const user = await User.findById(id);
 
             if (user) {
-                res.status(200).send(user);
+                if (updates.password) {
+                    var passwordMatch = await UserUtilities.unHashedPasswordMatchesHashed(
+                        updates.password,
+                        user.password
+                    );
+                    if (!passwordMatch) {
+                        updates.password = await UserUtilities.hashPassword(updates.password);
+                    } else {
+                        const { password, ...omitPw } = updates;
+                        updates = omitPw;
+                    }
+                }
+
+                const updatedUser = await User.findByIdAndUpdate(id, updates, { new: true });
+
+                res.status(200).send(new UserDTO(updatedUser));
             } else {
                 throw new NotFound(`A user with an ID of ${id} was not found in the database.`);
             }

@@ -1,9 +1,10 @@
 class GeneralError extends Error {
-    constructor(message, statusCode, name) {
+    constructor(message, statusCode, name, error) {
         super();
-        this.message = message;
+        error ? (this.message = error.message) : (this.message = message),
+            error ? (this.stack = error.stack) : (this.stack = this.stack),
+            error ? (this.name = error.name) : (this.name = name || this.name);
         this.statusCode = statusCode;
-        name ? (this.name = name) : (this.name = this.name);
     }
 
     getCode() {
@@ -12,28 +13,28 @@ class GeneralError extends Error {
 }
 
 class BadRequest extends GeneralError {
-    constructor(message, name) {
-        super(message, 400, name);
+    constructor(message, name, error) {
+        super(message, 400, name, error);
     }
 } // 400
 class Unauthorized extends GeneralError {
-    constructor(message, name) {
-        super(message, 401, name);
+    constructor(message, name, error) {
+        super(message, 401, name, error);
     }
 } // 401
 class Forbidden extends GeneralError {
-    constructor(message, name) {
-        super(message, 403, name);
+    constructor(message, name, error) {
+        super(message, 403, name, error);
     }
 } // 403
 class NotFound extends GeneralError {
-    constructor(message, name) {
-        super(message, 404, name);
+    constructor(message, name, error) {
+        super(message, 404, name, error);
     }
 } // 404
 class InternalServerError extends GeneralError {
-    constructor(message, name) {
-        super(message, 500, name);
+    constructor(message, name, error) {
+        super(message, 500, name, error);
     }
 } // 500
 
