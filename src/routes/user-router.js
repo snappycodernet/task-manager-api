@@ -14,13 +14,23 @@ const UserLoginDTO = require("../data/dto/user-login-dto");
 const UserUtilities = require("../data/models/utilities/user-utilities");
 const MongooseUtilities = require("../utilities/mongoose-utils");
 const AccountUtilities = require("../data/models/utilities/account-utilities");
+const { authMiddleware } = require("../middleware/auth");
 
 // Get all users
-userRouter.get("/", async (req, res, next) => {
+userRouter.get("/", authMiddleware, async (req, res, next) => {
     try {
+        console.log(JSON.stringify(req.user));
         const users = await User.find({});
 
         return res.status(200).send(UserUtilities.transformUsersToDtos(users));
+    } catch (err) {
+        next(err);
+    }
+});
+
+userRouter.get("/me", authMiddleware, async (req, res, next) => {
+    try {
+        return res.status(200).send(new UserDTO(req.user));
     } catch (err) {
         next(err);
     }
