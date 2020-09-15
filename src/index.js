@@ -12,6 +12,7 @@ const ErrorHandlerDistributor = require("./error-handling/error-handler");
 const userRouter = require("./routes/user-router");
 const taskRouter = require("./routes/task-router");
 const accountRouter = require("./routes/account-router");
+const roleRouter = require("./routes/role-router");
 
 const app = express();
 const PORT = parseInt(process.env.APP_PORT) || 3000;
@@ -30,6 +31,7 @@ morganBody(app, {
 app.use("/users", userRouter);
 app.use("/tasks", taskRouter);
 app.use("/account", accountRouter);
+app.use("/roles", roleRouter);
 
 // Global error handler
 app.use(ErrorHandlerDistributor.getErrorHandler());

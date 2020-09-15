@@ -11,15 +11,15 @@ const { ObjectID } = require("mongodb");
 const User = require("../data/models/user");
 const UserDTO = require("../data/dto/user-dto");
 const UserLoginDTO = require("../data/dto/user-login-dto");
+const UserRoleEnum = require("../enums/user-role-enum");
 const UserUtilities = require("../data/models/utilities/user-utilities");
 const MongooseUtilities = require("../utilities/mongoose-utils");
 const AccountUtilities = require("../data/models/utilities/account-utilities");
-const { authMiddleware } = require("../middleware/auth");
+const { authWrapper } = require("../middleware/auth");
 
 // Get all users
-userRouter.get("/", authMiddleware, async (req, res, next) => {
+userRouter.get("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
-        console.log(JSON.stringify(req.user));
         const users = await User.find({});
 
         return res.status(200).send(UserUtilities.transformUsersToDtos(users));
@@ -28,16 +28,8 @@ userRouter.get("/", authMiddleware, async (req, res, next) => {
     }
 });
 
-userRouter.get("/me", authMiddleware, async (req, res, next) => {
-    try {
-        return res.status(200).send(new UserDTO(req.user));
-    } catch (err) {
-        next(err);
-    }
-});
-
 // Get a single user by ID
-userRouter.get("/:id", async (req, res, next) => {
+userRouter.get("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const id = req.params.id;
 
@@ -64,6 +56,7 @@ userRouter.post("/", async (req, res, next) => {
 
         const user = new User(req.body);
         user.password = await UserUtilities.hashPassword(req.body.password);
+        user.roles.push(new ObjectID(process.env.STANDARD_USER_ROLE_ID));
 
         await user.save();
 
@@ -76,7 +69,7 @@ userRouter.post("/", async (req, res, next) => {
 });
 
 // Remove a user
-userRouter.delete("/:id", async (req, res, next) => {
+userRouter.delete("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const id = req.params.id;
 
@@ -97,7 +90,7 @@ userRouter.delete("/:id", async (req, res, next) => {
 });
 
 // Update a user
-userRouter.patch("/:id", async (req, res, next) => {
+userRouter.patch("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const id = req.params.id;
         let updates = req.body;
@@ -131,6 +124,14 @@ userRouter.patch("/:id", async (req, res, next) => {
         } else {
             throw new BadRequest(`Must enter a valid ID value. The value entered, ${id}, is not valid.`);
         }
+    } catch (err) {
+        next(err);
+    }
+});
+
+userRouter.get("/me", authWrapper(UserRoleEnum.ADMIN, UserRoleEnum.USER), async (req, res, next) => {
+    try {
+        return res.status(200).send(new UserDTO(req.user));
     } catch (err) {
         next(err);
     }

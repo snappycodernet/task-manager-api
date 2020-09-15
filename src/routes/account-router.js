@@ -8,6 +8,7 @@ const {
     InternalServerError,
 } = require("../error-handling/errors");
 const User = require("../data/models/user");
+const Role = require("../data/models/role");
 const UserLoginDTO = require("../data/dto/user-login-dto");
 const UserUtilities = require("../data/models/utilities/user-utilities");
 const AccountUtilities = require("../data/models/utilities/account-utilities");

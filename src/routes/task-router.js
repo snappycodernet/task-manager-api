@@ -10,11 +10,13 @@ const {
 const { ObjectID } = require("mongodb");
 const Task = require("../data/models/task");
 const TaskDTO = require("../data/dto/task-dto");
+const UserRoleEnum = require("../enums/user-role-enum");
 const TaskUtilities = require("../data/models/utilities/task-utilities");
 const MongooseUtilities = require("../utilities/mongoose-utils");
+const { authWrapper } = require("../middleware/auth");
 
 // Get all tasks
-taskRouter.get("/", async (req, res, next) => {
+taskRouter.get("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const tasks = await Task.find({});
 
@@ -25,7 +27,7 @@ taskRouter.get("/", async (req, res, next) => {
 });
 
 // Get a single task by ID
-taskRouter.get("/:id", async (req, res, next) => {
+taskRouter.get("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const id = req.params.id;
 
@@ -44,8 +46,12 @@ taskRouter.get("/:id", async (req, res, next) => {
 });
 
 // Create a new task
-taskRouter.post("/", async (req, res, next) => {
+taskRouter.post("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
+        const error = TaskUtilities.validateSaveSchema(req.body);
+
+        if (error) throw new BadRequest(null, null, error);
+
         const task = new Task(req.body);
 
         await task.save();
@@ -57,7 +63,7 @@ taskRouter.post("/", async (req, res, next) => {
 });
 
 // Remove a task
-taskRouter.delete("/:id", async (req, res, next) => {
+taskRouter.delete("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const id = req.params.id;
 
@@ -78,7 +84,7 @@ taskRouter.delete("/:id", async (req, res, next) => {
 });
 
 // Update a task
-taskRouter.patch("/:id", async (req, res, next) => {
+taskRouter.patch("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const id = req.params.id;
         let updates = req.body;

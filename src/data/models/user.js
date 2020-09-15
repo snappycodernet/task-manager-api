@@ -33,6 +33,7 @@ const userSchema = new mongoose.Schema({
         minlength: 7,
         trim: true,
     },
+    roles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Role" }],
 });
 
 userSchema.statics.findByCredentials = async (email, password) => {
