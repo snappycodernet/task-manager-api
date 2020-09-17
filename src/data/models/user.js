@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema({
         trim: true,
     },
     roles: [{ type: mongoose.Schema.Types.ObjectId, ref: "Role" }],
+    tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }],
 });
 
 userSchema.statics.findByCredentials = async (email, password) => {

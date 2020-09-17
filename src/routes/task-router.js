@@ -9,6 +9,7 @@ const {
 } = require("../error-handling/errors");
 const { ObjectID } = require("mongodb");
 const Task = require("../data/models/task");
+const User = require("../data/models/user");
 const TaskDTO = require("../data/dto/task-dto");
 const UserRoleEnum = require("../enums/user-role-enum");
 const TaskUtilities = require("../data/models/utilities/task-utilities");
@@ -46,15 +47,20 @@ taskRouter.get("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) =
 });
 
 // Create a new task
-taskRouter.post("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
+taskRouter.post("/", authWrapper(UserRoleEnum.User), async (req, res, next) => {
     try {
         const error = TaskUtilities.validateSaveSchema(req.body);
+        const user = req.user;
 
         if (error) throw new BadRequest(null, null, error);
 
         const task = new Task(req.body);
 
         await task.save();
+
+        const tasks = [...user.tasks, new ObjectID(task._id)];
+
+        await User.updateOne({ _id: user._id }, { tasks });
 
         res.status(201).send(new TaskDTO(task));
     } catch (err) {
@@ -63,7 +69,7 @@ taskRouter.post("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => 
 });
 
 // Remove a task
-taskRouter.delete("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
+taskRouter.delete("/:id", authWrapper(UserRoleEnum.User), async (req, res, next) => {
     try {
         const id = req.params.id;
 
@@ -84,7 +90,7 @@ taskRouter.delete("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next
 });
 
 // Update a task
-taskRouter.patch("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
+taskRouter.patch("/:id", authWrapper(UserRoleEnum.User), async (req, res, next) => {
     try {
         const id = req.params.id;
         let updates = req.body;

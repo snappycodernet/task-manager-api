@@ -112,7 +112,7 @@ router.patch("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => 
     }
 });
 
-router.patch("/assign/:uid/:rid", async (req, res, next) => {
+router.patch("/assign/:uid/:rid", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const { uid, rid } = req.params;
 

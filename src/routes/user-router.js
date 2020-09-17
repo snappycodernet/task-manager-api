@@ -48,7 +48,7 @@ userRouter.get("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) =
 });
 
 // Create a new user
-userRouter.post("/", async (req, res, next) => {
+userRouter.post("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const error = UserUtilities.validateSaveSchema(req.body);
 
@@ -124,14 +124,6 @@ userRouter.patch("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next)
         } else {
             throw new BadRequest(`Must enter a valid ID value. The value entered, ${id}, is not valid.`);
         }
-    } catch (err) {
-        next(err);
-    }
-});
-
-userRouter.get("/me", authWrapper(UserRoleEnum.ADMIN, UserRoleEnum.USER), async (req, res, next) => {
-    try {
-        return res.status(200).send(new UserDTO(req.user));
     } catch (err) {
         next(err);
     }
