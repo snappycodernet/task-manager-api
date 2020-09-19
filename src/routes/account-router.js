@@ -11,12 +11,15 @@ const { ObjectID } = require("mongodb");
 const User = require("../data/models/user");
 const Role = require("../data/models/role");
 const UserLoginDTO = require("../data/dto/user-login-dto");
+const UserRoleEnum = require("../enums/user-role-enum");
 const UserUtilities = require("../data/models/utilities/user-utilities");
 const TaskUtilities = require("../data/models/utilities/task-utilities");
 const AccountUtilities = require("../data/models/utilities/account-utilities");
 const UserDTO = require("../data/dto/user-dto");
 const TaskDTO = require("../data/dto/task-dto");
 const ProfileDTO = require("../data/dto/profile-dto");
+const { authWrapper } = require("../middleware/auth");
+const RoleUtilities = require("../data/models/utilities/role-utilities");
 
 router.post("/login", async (req, res, next) => {
     try {
@@ -65,8 +68,7 @@ router.get("/me", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
         await user.populate("tasks").execPopulate();
 
         const userDTO = new UserDTO(user);
-        const tasks = TaskUtilities.transformTasksToDtos(user.tasks);
-        const profile = new ProfileDTO(userDTO, tasks);
+        const profile = new ProfileDTO(userDTO);
 
         return res.status(200).send(profile);
     } catch (err) {

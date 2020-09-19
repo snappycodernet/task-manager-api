@@ -24,6 +24,7 @@ const authWrapper = (args) => {
 
             // find user roles and check if any are included in the roles argument passed in from authWrapper
             const userRoleNames = user.roles.map((r) => r.name);
+
             userHasRole = userRoleNames.some((r) => roles.includes(r));
 
             if (!userHasRole) throw new Error();

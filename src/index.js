@@ -17,6 +17,13 @@ const roleRouter = require("./routes/role-router");
 const app = express();
 const PORT = parseInt(process.env.APP_PORT) || 3000;
 
+app.use((req, res, next) => {
+    const maintenanceEnabled = process.env.UNDER_MAINTENANCE === "true";
+
+    if (maintenanceEnabled) return res.status(503).send("Under maintenance.");
+
+    next();
+});
 app.use(cors());
 app.use(express.json());
 

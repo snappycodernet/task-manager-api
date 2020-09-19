@@ -1,7 +1,6 @@
 class ProfileDTO {
-    constructor(userDTO, taskDTOs) {
+    constructor(userDTO) {
         this.user = userDTO;
-        this.tasks = taskDTOs;
     }
 }
 

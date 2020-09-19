@@ -47,7 +47,7 @@ taskRouter.get("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) =
 });
 
 // Create a new task
-taskRouter.post("/", authWrapper(UserRoleEnum.User), async (req, res, next) => {
+taskRouter.post("/", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
     try {
         const error = TaskUtilities.validateSaveSchema(req.body);
         const user = req.user;
@@ -69,7 +69,7 @@ taskRouter.post("/", authWrapper(UserRoleEnum.User), async (req, res, next) => {
 });
 
 // Remove a task
-taskRouter.delete("/:id", authWrapper(UserRoleEnum.User), async (req, res, next) => {
+taskRouter.delete("/:id", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
     try {
         const id = req.params.id;
 
@@ -90,7 +90,7 @@ taskRouter.delete("/:id", authWrapper(UserRoleEnum.User), async (req, res, next)
 });
 
 // Update a task
-taskRouter.patch("/:id", authWrapper(UserRoleEnum.User), async (req, res, next) => {
+taskRouter.patch("/:id", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
     try {
         const id = req.params.id;
         let updates = req.body;

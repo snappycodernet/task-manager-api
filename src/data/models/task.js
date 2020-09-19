@@ -1,7 +1,8 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
+const User = require("./user");
 
-const Task = mongoose.model("Task", {
+const taskSchema = new mongoose.Schema({
     description: {
         type: String,
         required: true,
@@ -14,5 +15,22 @@ const Task = mongoose.model("Task", {
         default: false,
     },
 });
+
+function removeTaskFromUser(task) {
+    User.find({ "tasks._id": task._id }, function (err, users) {
+        if (err) {
+            console.log(err);
+        } else {
+            for (let user of users) {
+                user.tasks = user.tasks.filter((r) => r._id != task._id);
+                User.updateOne({ _id: user._id }, user);
+            }
+        }
+    });
+}
+
+taskSchema.post("remove", removeTaskFromUser);
+
+const Task = mongoose.model("Task", taskSchema);
 
 module.exports = Task;

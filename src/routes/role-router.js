@@ -17,7 +17,7 @@ const RoleUtilities = require("../data/models/utilities/role-utilities");
 const MongooseUtilities = require("../utilities/mongoose-utils");
 const { authWrapper } = require("../middleware/auth");
 
-// Get all tasks
+// Get all role
 router.get("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const roles = await Role.find({});
@@ -28,7 +28,7 @@ router.get("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     }
 });
 
-// Get a single task by ID
+// Get a single role by ID
 router.get("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const id = req.params.id;
@@ -47,7 +47,7 @@ router.get("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     }
 });
 
-// Create a new task
+// Create a new role
 router.post("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const error = RoleUtilities.validateSaveSchema(req.body);
@@ -64,7 +64,7 @@ router.post("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     }
 });
 
-// Remove a task
+// Remove a role
 router.delete("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const id = req.params.id;
@@ -85,7 +85,7 @@ router.delete("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) =>
     }
 });
 
-// Update a task
+// Update a role
 router.patch("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const id = req.params.id;
