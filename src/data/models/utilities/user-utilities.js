@@ -65,6 +65,15 @@ class UserUtilities extends UtilitiesShared {
 
         return userDtoArray;
     }
+
+    static async loadDynamics(userArray) {
+        if (!userArray || userArray.length === 0) return;
+
+        for (let user of userArray) {
+            await user.populate("tasks").execPopulate();
+            await user.populate("roles").execPopulate();
+        }
+    }
 }
 
 module.exports = UserUtilities;

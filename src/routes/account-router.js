@@ -9,6 +9,7 @@ const {
 } = require("../error-handling/errors");
 const { ObjectID } = require("mongodb");
 const User = require("../data/models/user");
+const BlacklistToken = require("../data/models/blacklist-token");
 const Role = require("../data/models/role");
 const UserLoginDTO = require("../data/dto/user-login-dto");
 const UserRoleEnum = require("../enums/user-role-enum");
@@ -30,6 +31,9 @@ router.post("/login", async (req, res, next) => {
         if (error) throw new BadRequest(null, null, error);
 
         const user = await User.findByCredentials(email, password);
+
+        await user.populate("tasks").execPopulate();
+        await user.populate("roles").execPopulate();
 
         if (!user) throw new Unauthorized("Invalid username / password.");
 
@@ -71,6 +75,22 @@ router.get("/me", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
         const profile = new ProfileDTO(userDTO);
 
         return res.status(200).send(profile);
+    } catch (err) {
+        next(err);
+    }
+});
+
+// NOT IMPLEMENTED
+router.post("/logout", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
+    try {
+        const user = req.user;
+        const token = req.token;
+
+        const blacklistToken = new BlacklistToken({ token, reason: "User logged out.", user: user._id });
+
+        await blacklistToken.save();
+
+        res.status(200).send();
     } catch (err) {
         next(err);
     }

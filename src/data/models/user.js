@@ -49,6 +49,11 @@ userSchema.statics.findByCredentials = async (email, password) => {
     return null;
 };
 
+userSchema.methods.loadDynamics = async function () {
+    await this.populate("tasks").execPopulate();
+    await this.populate("roles").execPopulate();
+};
+
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;

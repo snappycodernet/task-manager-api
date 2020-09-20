@@ -22,6 +22,8 @@ userRouter.get("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => {
     try {
         const users = await User.find({});
 
+        await UserUtilities.loadDynamics(users);
+
         return res.status(200).send(UserUtilities.transformUsersToDtos(users));
     } catch (err) {
         next(err);
@@ -37,6 +39,8 @@ userRouter.get("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) =
             const user = await User.findById(id);
 
             if (!user) throw new NotFound(`A user with an ID of ${id} was not found in the database.`);
+
+            await user.loadDynamics();
 
             res.status(200).send(new UserDTO(user));
         } else {
@@ -59,6 +63,7 @@ userRouter.post("/", authWrapper(UserRoleEnum.ADMIN), async (req, res, next) => 
         user.roles.push(new ObjectID(process.env.STANDARD_USER_ROLE_ID));
 
         await user.save();
+        await user.loadDynamics();
 
         const token = AccountUtilities.generateAuthToken(user);
 

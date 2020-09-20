@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const User = require("../data/models/user");
+const BlacklistToken = require("../data/models/blacklist-token");
 const {
     BadRequest,
     NotFound,
@@ -15,9 +16,14 @@ const authWrapper = (args) => {
     const authMiddleware = async (req, res, next) => {
         try {
             const token = req.header("Authorization").split(" ")[1];
+            const blacklistedToken = await BlacklistToken.findOne({ token });
+
+            if (blacklistedToken) throw new Error();
+
             const key = process.env.SECRET_KEY;
             const decoded = jwt.verify(token, key);
             const user = await User.findOne({ _id: decoded._id });
+
             await user.populate("roles").execPopulate();
 
             if (!user) throw new Error();
@@ -30,6 +36,7 @@ const authWrapper = (args) => {
             if (!userHasRole) throw new Error();
 
             req.user = user;
+            req.token = token;
 
             next();
         } catch (err) {
