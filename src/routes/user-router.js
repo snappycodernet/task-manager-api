@@ -121,6 +121,7 @@ userRouter.patch("/:id", authWrapper(UserRoleEnum.ADMIN), async (req, res, next)
                 }
 
                 const updatedUser = await User.findByIdAndUpdate(id, updates, { new: true });
+                await updatedUser.loadDynamics();
 
                 res.status(200).send(new UserDTO(updatedUser));
             } else {

@@ -32,10 +32,9 @@ router.post("/login", async (req, res, next) => {
 
         const user = await User.findByCredentials(email, password);
 
-        await user.populate("tasks").execPopulate();
-        await user.populate("roles").execPopulate();
-
         if (!user) throw new Unauthorized("Invalid username / password.");
+
+        await user.loadDynamics();
 
         const token = AccountUtilities.generateAuthToken(user);
 
@@ -57,6 +56,7 @@ router.post("/register", async (req, res, next) => {
         user.roles.push(new ObjectID(process.env.STANDARD_USER_ROLE_ID));
 
         await user.save();
+        await user.loadDynamics();
 
         const token = AccountUtilities.generateAuthToken(user);
 
@@ -69,7 +69,7 @@ router.post("/register", async (req, res, next) => {
 router.get("/me", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
     try {
         const user = req.user;
-        await user.populate("tasks").execPopulate();
+        await user.loadDynamics();
 
         const userDTO = new UserDTO(user);
         const profile = new ProfileDTO(userDTO);
@@ -80,7 +80,6 @@ router.get("/me", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
     }
 });
 
-// NOT IMPLEMENTED
 router.post("/logout", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
     try {
         const user = req.user;
@@ -91,6 +90,48 @@ router.post("/logout", authWrapper(UserRoleEnum.USER), async (req, res, next) =>
         await blacklistToken.save();
 
         res.status(200).send();
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.delete("/me", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
+    try {
+        const user = req.user;
+        await User.findByIdAndDelete(user._id);
+
+        res.status(204).send();
+    } catch (err) {
+        next(err);
+    }
+});
+
+router.patch("/me", authWrapper(UserRoleEnum.USER), async (req, res, next) => {
+    try {
+        const user = req.user;
+        let updates = req.body;
+        const error = UserUtilities.validateUpdateSchema(updates);
+
+        if (error) throw new BadRequest(null, null, error);
+
+        if (updates.password) {
+            var passwordMatch = await UserUtilities.unHashedPasswordMatchesHashed(
+                updates.password,
+                user.password
+            );
+
+            if (!passwordMatch) {
+                updates.password = await UserUtilities.hashPassword(updates.password);
+            } else {
+                const { password, ...omitPw } = updates;
+                updates = omitPw;
+            }
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(user._id, updates, { new: true });
+        await updatedUser.loadDynamics();
+
+        res.status(200).send(new UserDTO(updatedUser));
     } catch (err) {
         next(err);
     }

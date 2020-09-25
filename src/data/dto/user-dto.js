@@ -3,6 +3,7 @@ const RoleUtilities = require("../models/utilities/role-utilities");
 
 class UserDTO {
     constructor(user) {
+        this.id = user._id;
         this.name = user.name || null;
         this.age = user.age || null;
         this.email = user.email || null;
